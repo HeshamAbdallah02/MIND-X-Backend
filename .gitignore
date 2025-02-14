@@ -1,0 +1,10 @@
+.env
+uploads/
+scripts/clearHeroContents.js
+scripts/createAdmin.js 
+scripts/createGIFContent.js
+scripts/createInitialHero.js
+scripts/createUpcomingEvents.js
+scripts/createVideoContent.js
+scripts/updateBrandLogo.js
+generateSecret.js
