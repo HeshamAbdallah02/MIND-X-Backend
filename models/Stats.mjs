@@ -13,11 +13,6 @@ const statSchema = new mongoose.Schema({
     trim: true,
     maxlength: 50
   },
-  description: {
-    type: String,
-    trim: true,
-    maxlength: 100
-  },
   icon: String, // Store icon library reference (e.g. 'FaUsers')
   order: {
     type: Number,
