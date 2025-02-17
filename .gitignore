@@ -2,7 +2,7 @@
 uploads/
 scripts/clearHeroContents.js
 scripts/createAdmin.js 
-scripts/createGIFContent.js
+scripts/createSampleStats.js
 scripts/createInitialHero.js
 scripts/createUpcomingEvents.js
 scripts/createVideoContent.js

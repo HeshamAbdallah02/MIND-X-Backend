@@ -2,11 +2,12 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Joi from 'joi';
-const router = express.Router();
 import Event from '../models/Event.mjs';
 import authMiddleware from '../middleware/auth.mjs';
 import asyncHandler from '../middleware/asyncHandler.mjs';
 import sanitizeEvent from '../middleware/sanitizeEvents.mjs';
+
+const router = express.Router();
 
 // Get all events including drafts (protected)
 router.get('/admin', authMiddleware, asyncHandler(async (req, res) => {

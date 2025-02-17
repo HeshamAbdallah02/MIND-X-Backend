@@ -12,6 +12,7 @@ import headerRoutes from './routes/header.mjs';
 import blogRoutes from './routes/blog.mjs';
 import cleanupTempUploads from './scripts/cleanupTempUploads.js';
 import brandSettingsRoutes from './routes/brandSettings.mjs';
+import statRoutes from './routes/stats.mjs';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api/hero', heroRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/settings', brandSettingsRoutes);
+app.use('/api/stats', statRoutes);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 

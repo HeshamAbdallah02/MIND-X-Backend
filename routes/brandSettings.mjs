@@ -1,7 +1,7 @@
 // backend/routes/brandSettings.js
 import express from 'express';
-import Settings from '../models/BrandSettings.mjs';
 import authMiddleware from '../middleware/auth.mjs';
+import Settings from '../models/BrandSettings.mjs';
 import asyncHandler from '../middleware/asyncHandler.mjs';
 import Joi from 'joi';
 
@@ -18,7 +18,7 @@ const settingsValidation = Joi.object({
   visionBgColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
   missionTextColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
   visionTextColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-});
+}).unknown(true);
 
 // Get settings
 router.get('/', asyncHandler(async (_, res) => {
@@ -44,8 +44,11 @@ router.get('/', asyncHandler(async (_, res) => {
 
 // Update settings (protected)
 router.put('/', authMiddleware, asyncHandler(async (req, res) => {
+  console.log('Received update request:', req.body); // Debug log
+  
   const { error } = settingsValidation.validate(req.body);
   if (error) {
+    console.log('Validation error:', error); // Debug log
     return res.status(400).json({
       message: 'Validation failed',
       details: error.details.map(d => ({
@@ -61,6 +64,7 @@ router.put('/', authMiddleware, asyncHandler(async (req, res) => {
     { new: true, upsert: true, runValidators: true }
   );
 
+  console.log('Updated settings:', settings); // Debug log
   res.json(settings);
 }));
 
