@@ -7,4 +7,6 @@ scripts/createInitialHero.js
 scripts/createUpcomingEvents.js
 scripts/createVideoContent.js
 scripts/updateBrandLogo.js
+scripts/seedTestimonials.js
 generateSecret.js
+sample-testimonials.json

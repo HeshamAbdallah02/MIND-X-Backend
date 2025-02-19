@@ -14,6 +14,10 @@ router.get('/', asyncHandler(async (req, res) => {
 
 // POST create new stat (protected)
 router.post('/', authMiddleware, asyncHandler(async (req, res) => {
+  const count = await Stat.countDocuments();
+  if (count >= 7) {
+    return res.status(400).json({ message: 'Maximum of 7 statistics allowed' });
+  }
   const stat = await Stat.create(req.body);
   res.status(201).json(stat);
 }));
