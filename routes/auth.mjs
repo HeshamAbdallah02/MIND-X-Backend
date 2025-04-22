@@ -13,27 +13,37 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Find admin by email
-    const admin = await Admin.findOne({ email });
+    console.log('Login attempt for:', email);
+    
+    const admin = await Admin.findOne({ email }).select('+passwordHash');
     if (!admin) {
+      console.warn('No admin found for email:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
+    console.log('Found admin:', admin._id);
+    
     const isMatch = await bcrypt.compare(password, admin.passwordHash);
     if (!isMatch) {
+      console.warn('Password mismatch for admin:', admin._id);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Create token (like issuing a temporary badge)
     const token = jwt.sign(
       { id: admin._id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
+    console.log('Successful login for:', admin._id);
     res.json({ token });
+
   } catch (error) {
+    console.error('Login Error:', {
+      error: error.message,
+      stack: error.stack,
+      input: req.body
+    });
     res.status(500).json({ message: 'Server error' });
   }
 });
