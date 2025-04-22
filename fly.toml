@@ -3,7 +3,6 @@ primary_region = "cdg"
 
 [build]
   dockerfile = "Dockerfile"
-  builder = "paketobuildpacks/builder:base"
 
 [env]
   PORT = "8080"
@@ -23,34 +22,11 @@ primary_region = "cdg"
     path = "/api/health"
     protocol = "http"
     timeout = "5s"
-    [http_service.checks.headers]
-      Content-Type = "application/json"
-
-[http_service.concurrency]
-  type = "connections"
-  hard_limit = 550
-  soft_limit = 500
 
 [[services.ports]]
-  force_https = true
   handlers = ["http"]
   port = 80
 
 [[services.ports]]
   handlers = ["tls", "http"]
   port = 443
-
-[[http_service.headers]]
-  for = "/*"
-  [http_service.headers.values]
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-[processes]
-  web = "node index.mjs"
-
-[deploy]
-  strategy = "immediate"

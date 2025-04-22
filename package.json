@@ -4,16 +4,13 @@
   "main": "index.mjs",
   "type": "module",
   "scripts": {
-    "start": "node index.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "node scripts/seed.mjs"
+    "start": "node index.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@fortawesome/react-fontawesome": "^0.2.2",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "cors": "^2.8.5",
