@@ -28,6 +28,13 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
+console.log("Server starting...");
+console.log("Cloudinary Config:", {
+  name: process.env.CLOUDINARY_NAME,
+  key: process.env.CLOUDINARY_API_KEY ? "exists" : "missing",
+  secret: process.env.CLOUDINARY_API_SECRET ? "exists" : "missing"
+});
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
@@ -57,6 +64,11 @@ app.use('/api/testimonials', testimonials);
 app.use('/api/sponsors', sponsors);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
+
+// Add this right before your health check route
+app.get('/', (req, res) => {
+  res.send('Welcome to Mind-X Backend!');
+});
 
 app.get('/api/health', (_req, res) => {
   res.json({ message: 'Server is running!' });
