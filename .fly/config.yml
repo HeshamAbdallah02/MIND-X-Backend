@@ -1,7 +1,0 @@
-# .fly/config.yml
-app: mind-x-backend
-primary_region: cdg
-kill_signal: SIGINT
-kill_timeout: 5s
-processes:
-  app: node index.mjs
