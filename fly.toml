@@ -3,9 +3,11 @@ primary_region = "cdg"
 
 [build]
   dockerfile = "Dockerfile"
+  builder = "paketobuildpacks/builder:base"
 
 [env]
   PORT = "8080"
+  NODE_ENV = "production"
 
 [http_service]
   internal_port = 8080
@@ -46,3 +48,9 @@ primary_region = "cdg"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+[processes]
+  web = "node index.mjs"
+
+[deploy]
+  strategy = "immediate"
