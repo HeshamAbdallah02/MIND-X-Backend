@@ -14,6 +14,7 @@ import cleanupTempUploads from './scripts/cleanupTempUploads.js';
 import brandSettingsRoutes from './routes/brandSettings.mjs';
 import statRoutes from './routes/stats.mjs';
 import testimonials from './routes/testimonials.mjs';
+import sponsors from './routes/sponsors.mjs';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/settings', brandSettingsRoutes);
 app.use('/api/stats', statRoutes);
 app.use('/api/testimonials', testimonials);
+app.use('/api/sponsors', sponsors);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 

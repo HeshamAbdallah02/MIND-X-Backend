@@ -54,17 +54,25 @@ router.put('/', authMiddleware, async (req, res) => {
 // Update logo
 router.put('/logo', authMiddleware, async (req, res) => {
   try {
+    const { imageUrl, publicId } = req.body.logo;
+    
     let header = await Header.findOne();
+    if (!header) header = new Header();
     
-    if (!header) {
-      header = new Header();
-    }
+    header.logo = { 
+      imageUrl,
+      publicId,
+      altText: header.logo?.altText || 'MIND-X Logo'
+    };
     
-    header.logo = req.body.logo;
     await header.save();
     res.json(header);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating logo' });
+    console.error('Logo update error:', error);
+    res.status(500).json({ 
+      error: 'Error updating logo',
+      details: error.message 
+    });
   }
 });
 

@@ -1,4 +1,4 @@
-// backend/models/Event.js
+// backend/models/Event.mjs
 import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema({

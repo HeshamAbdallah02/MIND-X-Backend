@@ -1,4 +1,4 @@
-// backend/routes/brandSettings.js
+// backend/routes/brandSettings.mjs
 import express from 'express';
 import authMiddleware from '../middleware/auth.mjs';
 import Settings from '../models/BrandSettings.mjs';
@@ -7,65 +7,125 @@ import Joi from 'joi';
 
 const router = express.Router();
 
+// matches #RGB, #RRGGBB or rgba(r,g,b,a)
+const colorPattern = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$|^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)$/;
+
 const settingsValidation = Joi.object({
   logo: Joi.object({
     url: Joi.string().uri().required(),
     alt: Joi.string().allow('')
-  }).required(),
-  missionText: Joi.string().required(),
-  visionText: Joi.string().required(),
-  missionBgColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
-  visionBgColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
-  missionTextColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
-  visionTextColor: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-}).unknown(true);
+  }).optional(),
 
-// Get settings
-router.get('/', asyncHandler(async (_, res) => {
+  missionText:  Joi.string().optional(),
+  visionText:   Joi.string().optional(),
+  missionBgColor:   Joi.string().pattern(colorPattern).optional(),
+  visionBgColor:    Joi.string().pattern(colorPattern).optional(),
+  missionTextColor: Joi.string().pattern(colorPattern).optional(),
+  visionTextColor:  Joi.string().pattern(colorPattern).optional(),
+
+  sponsorsColors: Joi.object({
+    sectionBackground: Joi.string().pattern(colorPattern),
+    titleColor:        Joi.string().pattern(colorPattern),
+    sponsorsSpeed:     Joi.number().integer().min(50).max(300),
+    partnersSpeed:     Joi.number().integer().min(50).max(300)
+  }).optional(),
+
+  statsColors: Joi.object({
+    sectionBackground:  Joi.string().pattern(colorPattern).optional(),
+    titleColor:         Joi.string().pattern(colorPattern).optional(),
+    iconColor:          Joi.string().pattern(colorPattern).optional(),
+    numberColor:        Joi.string().pattern(colorPattern).optional(),
+    textPrimary:        Joi.string().pattern(colorPattern).optional(),
+    feedbackTextColor:  Joi.string().pattern(colorPattern).optional()
+  }).optional(),
+
+  testimonialsColors: Joi.object({
+    sectionBackground:   Joi.string().pattern(colorPattern).optional(),
+    titleColor:          Joi.string().pattern(colorPattern).optional(),
+    circleBorderColor:   Joi.string().pattern(colorPattern).optional(),
+    quoteIconColor:      Joi.string().pattern(colorPattern).optional(),
+    quoteIconBackground: Joi.string().pattern(colorPattern).optional(),
+    nameColor:           Joi.string().pattern(colorPattern).optional(),
+    positionColor:       Joi.string().pattern(colorPattern).optional(),
+    feedbackBackground:  Joi.string().pattern(colorPattern).optional(),
+    feedbackBorderColor: Joi.string().pattern(colorPattern).optional(),
+    feedbackTextColor:   Joi.string().pattern(colorPattern).optional()
+  }).optional(),
+
+  footerLogo: Joi.object({
+    url: Joi.string().uri().required(),
+    alt: Joi.string().allow('')
+  }).optional(),
+
+  footerSlogan: Joi.string().max(150).optional(),
+
+  footerColors: Joi.object({
+    background:     Joi.string().pattern(colorPattern).optional(),
+    titleColor:     Joi.string().pattern(colorPattern).optional(),
+    textColor:      Joi.string().pattern(colorPattern).optional(),
+    linkColor:      Joi.string().pattern(colorPattern).optional(),
+    inputBgColor:   Joi.string().pattern(colorPattern).optional(),
+    inputTextColor: Joi.string().pattern(colorPattern).optional(),
+    buttonBgColor:  Joi.string().pattern(colorPattern).optional(),
+    buttonTextColor:Joi.string().pattern(colorPattern).optional()
+  }).optional()
+})
+.unknown(true)    // allow `_id`, `__v`, timestamps, any other extra keys
+.min(1);          // require at least one field in the payload
+
+// GET current settings
+router.get('/', asyncHandler(async (_req, res) => {
   let settings = await Settings.findOne();
-  
   if (!settings) {
     settings = await Settings.create({
-      logo: {
-        url: '/default-logo.png',
-        alt: 'MIND-X Logo'
-      },
-      missionText: "To inspire and empower individuals through innovative development solutions, fostering growth and positive change in communities worldwide.",
-      visionText: "To be the catalyst for transformative change, creating a world where inspiration and development go hand in hand, nurturing the unlimited potential of the human spirit.",
-      missionBgColor: '#FBB859',
-      visionBgColor: '#81C99C',
+      logo: { url: '/default-logo.png', alt: 'MIND‑X Logo' },
+      missionText:  "To inspire and empower…",
+      visionText:   "To be the catalyst…",
+      missionBgColor:   '#FBB859',
+      visionBgColor:    '#81C99C',
       missionTextColor: '#606161',
-      visionTextColor: '#606161'
+      visionTextColor:  '#606161',
+      sponsorsColors: {
+        sectionBackground: '#ffffff',
+        titleColor:        '#606161',
+        sponsorsSpeed:     100,
+        partnersSpeed:     100
+      },
+      footerLogo: { url: '/default-logo.png', alt: 'MIND‑X Logo' },
+      footerSlogan: 'Empowering students through innovation.',
+      footerColors: {}
     });
   }
-  
   res.json(settings);
 }));
 
-// Update settings (protected)
+// PUT update settings
 router.put('/', authMiddleware, asyncHandler(async (req, res) => {
-  console.log('Received update request:', req.body); // Debug log
-  
-  const { error } = settingsValidation.validate(req.body);
+  console.log('Received update request:', req.body);
+
+  // 1️⃣ Validate only the incoming payload
+  const { error } = settingsValidation.validate(req.body, { abortEarly: false });
   if (error) {
-    console.log('Validation error:', error); // Debug log
-    return res.status(400).json({
-      message: 'Validation failed',
-      details: error.details.map(d => ({
-        field: d.path.join('.'),
-        message: d.message.replace(/['"]/g, '')
-      }))
-    });
+    const details = error.details.map(d => ({
+      field:   d.path.join('.'),
+      message: d.message.replace(/['"]/g, '')
+    }));
+    return res.status(400).json({ message: 'Validation failed', details });
   }
 
-  const settings = await Settings.findOneAndUpdate(
-    {},
-    req.body,
-    { new: true, upsert: true, runValidators: true }
+  // 2️⃣ Update exactly what was sent (no stripping or re-writing of other fields)
+  const updated = await Settings.findOneAndUpdate(
+    {},               // match the single document
+    { $set: req.body },
+    {
+      new: true,
+      upsert: true,
+      runValidators: true,
+      setDefaultsOnInsert: true
+    }
   );
 
-  console.log('Updated settings:', settings); // Debug log
-  res.json(settings);
+  res.json(updated);
 }));
 
 export default router;

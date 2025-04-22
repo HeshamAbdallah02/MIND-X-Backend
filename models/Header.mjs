@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const headerSchema = new mongoose.Schema({
   logo: {
     imageUrl: String,
+    publicId: String,
     altText: { type: String, default: 'MIND-X Logo' }
   },
   colors: {

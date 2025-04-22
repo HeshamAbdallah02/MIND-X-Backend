@@ -45,6 +45,21 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   res.status(201).json(testimonial);
 }));
 
+router.patch('/:id/active', authMiddleware, asyncHandler(async (req, res) => {
+  const { active } = req.body;
+  const testimonial = await Testimonial.findByIdAndUpdate(
+    req.params.id,
+    { active },
+    { new: true }
+  );
+
+  if (!testimonial) {
+    return res.status(404).json({ message: 'Testimonial not found' });
+  }
+
+  res.json(testimonial);
+}));
+
 // Update testimonial (protected)
 router.put('/:id', authMiddleware, asyncHandler(async (req, res) => {
   const { error } = testimonialValidation.validate(req.body);

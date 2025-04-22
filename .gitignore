@@ -8,5 +8,7 @@ scripts/createUpcomingEvents.js
 scripts/createVideoContent.js
 scripts/updateBrandLogo.js
 scripts/seedTestimonials.js
+scripts/seed.mjs
 generateSecret.js
 sample-testimonials.json
+seeds/
