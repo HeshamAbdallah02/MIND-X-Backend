@@ -56,5 +56,33 @@ router.get('/me', authMiddleware, (req, res) => {
   }
 });
 
+// Temporary route to create first admin
+router.post('/create-first-admin', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: 'Admin already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const admin = new Admin({
+      email,
+      passwordHash
+    });
+
+    await admin.save();
+    
+    res.status(201).json({ message: 'Admin created' });
+    
+  } catch (error) {
+    console.error('Admin Creation Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 export default router;
