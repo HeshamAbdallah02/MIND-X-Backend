@@ -1,13 +1,48 @@
-# fly.toml — sits alongside your Dockerfile in backend/
 app = "mind-x-backend"
-primary_region = "cdg"      # or whichever region you prefer
+primary_region = "cdg"
 
 [build]
-  # tell Fly to build using your Dockerfile
   dockerfile = "Dockerfile"
 
 [env]
-  PORT = "5000"
+  PORT = "8080"
 
-[deploy]
-  # auto_release = true   # you can enable this if you like
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/api/health"
+    protocol = "http"
+    timeout = "5s"
+    [http_service.checks.headers]
+      Content-Type = "application/json"
+
+[http_service.concurrency]
+  type = "connections"
+  hard_limit = 550
+  soft_limit = 500
+
+[[services.ports]]
+  force_https = true
+  handlers = ["http"]
+  port = 80
+
+[[services.ports]]
+  handlers = ["tls", "http"]
+  port = 443
+
+[[http_service.headers]]
+  for = "/*"
+  [http_service.headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
