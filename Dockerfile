@@ -8,8 +8,8 @@ WORKDIR /app
 # Copy package files first to leverage Docker cache
 COPY package*.json ./
 
-# Install production dependencies only and clean npm cache
-RUN npm ci --only=production && \
+# Install production dependencies
+RUN npm ci --only=production --legacy-peer-deps && \
     npm cache clean --force
 
 # Copy application code
@@ -20,7 +20,7 @@ ENV PORT=8080 \
     NODE_ENV=production \
     HOME=/app
 
-# Create and set permissions for tmp directory if needed
+# Create and set permissions for tmp directory
 RUN mkdir -p /app/tmp && \
     chown -R appuser:appgroup /app/tmp
 
@@ -30,7 +30,7 @@ USER appuser
 # Expose port
 EXPOSE 8080
 
-# Health check using curl instead of wget (alpine includes curl by default)
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/api/health || exit 1
 
