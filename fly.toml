@@ -1,32 +1,15 @@
-app = "mind-x-backend"
-primary_region = "cdg"
+app = "your-app-name"
+primary_region = "iad"  # Choose your region
 
 [build]
-  dockerfile = "Dockerfile"
+  [build.args]
+    NODE_ENV = "production"
 
 [env]
   PORT = "8080"
-  NODE_ENV = "production"
 
 [http_service]
   internal_port = 8080
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
-
-  [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    path = "/api/health"
-    protocol = "http"
-    timeout = "5s"
-
-[[services.ports]]
-  handlers = ["http"]
-  port = 80
-
-[[services.ports]]
-  handlers = ["tls", "http"]
-  port = 443
