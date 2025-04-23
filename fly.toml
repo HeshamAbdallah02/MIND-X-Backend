@@ -1,5 +1,5 @@
 app = "your-app-name"
-primary_region = "iad"  # Choose your region
+primary_region = "iad"
 
 [build]
   [build.args]

@@ -74,6 +74,19 @@ app.get('/api/health', (_req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
+// Add to index.mjs
+app.get('/db-check', async (req, res) => {
+  try {
+    await mongoose.connection.db.admin().ping();
+    res.json({ status: 'Connected' });
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message,
+      connection: mongoose.connection.readyState
+    });
+  }
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
