@@ -84,5 +84,19 @@ router.post('/create-first-admin', async (req, res) => {
   }
 });
 
+// In auth.mjs
+router.get('/admin-check', async (req, res) => {
+  try {
+    const admins = await Admin.find();
+    console.log('Existing Admins:', admins);
+    res.json({
+      count: admins.length,
+      admins: admins.map(a => ({ id: a._id, email: a.email }))
+    });
+  } catch (error) {
+    console.error('Admin Check Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 export default router;
