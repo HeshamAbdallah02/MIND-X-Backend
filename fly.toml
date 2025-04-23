@@ -2,6 +2,11 @@ app = "mind-x-backend"
 primary_region = "cdg"
 
 [build]
+  [build.args]
+    NODE_ENV = "production"
+
+[env]
+  PORT = "8080"
 
 [http_service]
   internal_port = 8080
