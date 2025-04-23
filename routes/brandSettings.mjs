@@ -8,7 +8,7 @@ import Joi from 'joi';
 const router = express.Router();
 
 // matches #RGB, #RRGGBB or rgba(r,g,b,a)
-const colorPattern = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$|^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)$/;
+const colorPattern = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$|^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(0|1|0?\.\d+)\s*\)$/i;
 
 const settingsValidation = Joi.object({
   logo: Joi.object({
