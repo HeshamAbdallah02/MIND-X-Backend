@@ -145,4 +145,42 @@ router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
   }
 });
 
+// 4. Delete Endpoint with Cloudinary Debugging
+router.delete('/:publicId', authMiddleware, async (req, res) => {
+  try {
+    const { publicId } = req.params;
+    
+    if (!publicId) {
+      return res.status(400).json({ error: 'Missing public ID' });
+    }
+
+    // Cloudinary deletion with debugging
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: 'image',
+      invalidate: true
+    });
+
+    console.log('Cloudinary Delete Result:', result);
+
+    if (result.result !== 'ok') {
+      return res.status(400).json({ 
+        error: 'Failed to delete image',
+        details: result
+      });
+    }
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Delete Error:', {
+      error: error.message,
+      publicId: req.params.publicId
+    });
+    res.status(500).json({ 
+      error: 'Delete failed',
+      code: 'DELETE_ERROR'
+    });
+  }
+});
+
 export default router;
