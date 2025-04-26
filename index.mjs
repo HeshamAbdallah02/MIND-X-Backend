@@ -74,7 +74,6 @@ app.get('/api/health', (_req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
-// Add to index.mjs
 app.get('/db-check', async (req, res) => {
   try {
     await mongoose.connection.db.admin().ping();

@@ -54,7 +54,7 @@ const settingsValidation = Joi.object({
 
   footerLogo: Joi.object({
     url: Joi.string().uri().required(),
-    alt: Joi.string().allow('')
+    alt: Joi.string().allow('').optional()
   }).optional(),
 
   footerSlogan: Joi.string().max(150).optional(),
@@ -126,6 +126,53 @@ router.put('/', authMiddleware, asyncHandler(async (req, res) => {
   );
 
   res.json(updated);
+}));
+
+// Change PUT to PATCH for partial updates
+router.patch('/', authMiddleware, asyncHandler(async (req, res) => {
+  console.log('Received update request:', req.body);
+
+  // Validate only the incoming payload
+  const { error } = settingsValidation.validate(req.body, { 
+    abortEarly: false,
+    allowUnknown: true
+  });
+
+  if (error) {
+    const details = error.details.map(d => ({
+      field: d.path.join('.'),
+      message: d.message.replace(/['"]/g, ''),
+      type: d.type
+    }));
+    console.error('Validation error:', details);
+    return res.status(400).json({ 
+      message: 'Validation failed',
+      errors: details
+    });
+  }
+
+  try {
+    const updated = await Settings.findOneAndUpdate(
+      {},
+      { $set: req.body },
+      {
+        new: true,
+        runValidators: true,
+        context: 'query',
+        setDefaultsOnInsert: true,
+        upsert: true
+      }
+    );
+
+    console.log('Successful update:', updated);
+    res.json(updated);
+  } catch (dbError) {
+    console.error('Database error:', dbError);
+    res.status(500).json({
+      message: 'Database update failed',
+      error: dbError.message
+    });
+  }
 }));
 
 export default router;
