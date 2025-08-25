@@ -30,7 +30,7 @@ app.use((err, _req, res, _next) => {
 
 console.log("Server starting...");
 console.log("Cloudinary Config:", {
-  name: process.env.CLOUDINARY_NAME,
+  name: process.env.CLOUDINARY_CLOUD_NAME,
   key: process.env.CLOUDINARY_API_KEY ? "exists" : "missing",
   secret: process.env.CLOUDINARY_API_SECRET ? "exists" : "missing"
 });
