@@ -16,6 +16,7 @@ import brandSettingsRoutes from './routes/brandSettings.mjs';
 import statRoutes from './routes/stats.mjs';
 import testimonials from './routes/testimonials.mjs';
 import sponsors from './routes/sponsors.mjs';
+import awardsRoutes from './routes/awards.mjs';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use('/api/settings', brandSettingsRoutes);
 app.use('/api/stats', statRoutes);
 app.use('/api/testimonials', testimonials);
 app.use('/api/sponsors', sponsors);
+app.use('/api/awards', awardsRoutes);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 
@@ -88,7 +90,7 @@ app.get('/db-check', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
