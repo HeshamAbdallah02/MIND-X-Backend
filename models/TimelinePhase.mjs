@@ -22,6 +22,16 @@ const timelinePhaseSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  image: {
+    url: {
+      type: String,
+      default: null
+    },
+    public_id: {
+      type: String,
+      default: null
+    }
+  },
   backgroundColor: {
     type: String,
     default: '#ffffff'
