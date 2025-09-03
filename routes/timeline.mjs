@@ -350,15 +350,15 @@ router.post('/phases', authMiddleware, asyncHandler(async (req, res) => {
       headline: req.body.headline,
       description: req.body.description,
       imageUrl: req.body.imageUrl || null,
-      imageAlt: req.body.imageAlt || req.body.headline || '',
-      backgroundColor: req.body.backgroundColor || '#ffffff',
-      textColor: req.body.textColor || '#1e293b',
-      accentColor: req.body.accentColor || '#81C99C',
-      position: req.body.position || 'auto',
+      imageAlt: req.body.headline || '', // Use headline as alt text automatically
+      backgroundColor: '#ffffff', // Always use default colors
+      textColor: '#1e293b',
+      accentColor: '#81C99C',
+      position: 'left', // Always left position
       isActive: req.body.isActive !== false,
       order: req.body.order || 0,
       sectionId: req.body.sectionId || defaultSection._id,
-      expandable: req.body.expandable || false
+      expandable: true // Always expandable
     };
 
     // Validate required fields
