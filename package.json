@@ -4,7 +4,8 @@
   "main": "index.mjs",
   "type": "module",
   "scripts": {
-    "start": "node index.mjs"
+    "start": "node index.mjs",
+    "seed:seasons": "node scripts/seedSeasons.js"
   },
   "keywords": [],
   "author": "",
