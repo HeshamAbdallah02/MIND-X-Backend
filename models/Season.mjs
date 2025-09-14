@@ -34,6 +34,11 @@ const boardMemberSchema = new mongoose.Schema({
     trim: true,
     maxlength: 500
   },
+  profileUrl: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   displayOrder: {
     type: Number,
     default: 0
