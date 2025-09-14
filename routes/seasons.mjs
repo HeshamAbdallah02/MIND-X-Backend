@@ -293,12 +293,21 @@ router.post('/admin/:id/board-members', authMiddleware, asyncHandler(async (req,
     return res.status(404).json({ message: 'Season not found' });
   }
   
+  // Process member data
+  const memberData = { ...req.body };
+  
+  // If this member is being set as leader, ensure position is "Team Leader"
+  if (memberData.isLeader) {
+    memberData.position = 'Team Leader';
+    
+    // Remove leader status from all existing members
+    season.boardMembers.forEach(member => {
+      member.isLeader = false;
+    });
+  }
+  
   // Set display order for the new member
-  const nextOrder = season.boardMembers.length;
-  const memberData = {
-    ...req.body,
-    displayOrder: nextOrder
-  };
+  memberData.displayOrder = season.boardMembers.length;
   
   season.boardMembers.push(memberData);
   await season.save();
@@ -321,8 +330,23 @@ router.put('/admin/:id/board-members/:memberId', authMiddleware, asyncHandler(as
     return res.status(404).json({ message: 'Board member not found' });
   }
   
+  // Process update data
+  const updateData = { ...req.body };
+  
+  // If this member is being set as leader, ensure position is "Team Leader"
+  if (updateData.isLeader) {
+    updateData.position = 'Team Leader';
+    
+    // Remove leader status from all other members
+    season.boardMembers.forEach(m => {
+      if (m._id.toString() !== req.params.memberId) {
+        m.isLeader = false;
+      }
+    });
+  }
+  
   // Update member data
-  Object.assign(member, req.body);
+  Object.assign(member, updateData);
   await season.save();
   
   res.json(member);

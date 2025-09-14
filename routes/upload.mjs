@@ -10,13 +10,14 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: 10 * 1024 * 1024, // 10MB (matches Cloudinary free plan limit)
     files: 1
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
       'image/jpeg',
       'image/png',
+      'image/webp',
       'image/svg+xml'
     ];
     
@@ -90,9 +91,16 @@ router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
               http_code: error.http_code,
               error
             });
+            
+            // Provide more specific error messages
+            let errorMessage = error.message;
+            if (error.message && error.message.includes('file size too large')) {
+              errorMessage = 'Image file is too large. Please use an image under 10MB.';
+            }
+            
             reject({
               code: 'CLOUDINARY_ERROR',
-              message: error.message
+              message: errorMessage
             });
           } else {
             console.log('Cloudinary Upload Success:', {
