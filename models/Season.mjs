@@ -53,11 +53,16 @@ const highlightSchema = new mongoose.Schema({
     trim: true,
     maxlength: 200
   },
+  url: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   description: {
     type: String,
-    required: true,
     trim: true,
-    maxlength: 1000
+    maxlength: 1000,
+    default: ''
   },
   image: {
     url: {
