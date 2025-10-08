@@ -7,7 +7,8 @@ import './config/cloudinary.mjs';
 import authRoutes from './routes/auth.mjs';
 import heroRoutes from './routes/hero.mjs';
 import storyHeroRoutes from './routes/storyHero.mjs';
-import eventRoutes from './routes/events.mjs';
+import homeEventRoutes from './routes/homeEvents.mjs'; // Home page upcoming events
+import pageEventRoutes from './routes/pageEvents.mjs'; // Events page
 import uploadRoutes from './routes/upload.mjs';
 import headerRoutes from './routes/header.mjs';
 import blogRoutes from './routes/blog.mjs';
@@ -62,7 +63,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/header', headerRoutes);
 app.use('/api/hero', heroRoutes);
 app.use('/api/story-hero', storyHeroRoutes);
-app.use('/api/events', eventRoutes);
+app.use('/api/events', homeEventRoutes);        // Home page upcoming events
+app.use('/api/page-events', pageEventRoutes);   // Events page featured & past events
 app.use('/api/blogs', blogRoutes);
 app.use('/api/settings', brandSettingsRoutes);
 app.use('/api/stats', statRoutes);

@@ -1,8 +1,9 @@
-// backend/routes/events.mjs
+// backend/routes/homeEvents.mjs
+// Routes for Home Page "Upcoming Events" Section
 import express from 'express';
 import mongoose from 'mongoose';
 import Joi from 'joi';
-import Event from '../models/Event.mjs';
+import HomeEvent from '../models/HomeEvent.mjs';
 import authMiddleware from '../middleware/auth.mjs';
 import asyncHandler from '../middleware/asyncHandler.mjs';
 import sanitizeEvent from '../middleware/sanitizeEvents.mjs';
@@ -12,7 +13,7 @@ const router = express.Router();
 // Get all events including drafts (protected)
 router.get('/admin', authMiddleware, asyncHandler(async (req, res) => {
   // First, get all events sorted by order
-  const events = await Event.find().lean();
+  const events = await HomeEvent.find().lean();
   
   // Then sort them in memory
   const sortedEvents = events.sort((a, b) => {
@@ -34,17 +35,17 @@ router.get('/admin', authMiddleware, asyncHandler(async (req, res) => {
 
 // Get all events (public)
 router.get('/', asyncHandler(async (req, res) => {
-  const events = await Event.find({ active: true }).sort('order');
+  const events = await HomeEvent.find({ active: true }).sort('order');
   res.json(events);
 }));
 
-// Get single event (public)
+// Get single HomeEvent (public)
 router.get('/:id', asyncHandler(async (req, res) => {
-  const event = await Event.findById(req.params.id);
-  if (!event) {
-    return res.status(404).json({ message: 'Event not found' });
+  const HomeEvent = await HomeEvent.findById(req.params.id);
+  if (!HomeEvent) {
+    return res.status(404).json({ message: 'HomeEvent not found' });
   }
-  res.json(event);
+  res.json(HomeEvent);
 }));
 
 const eventValidation = Joi.object({
@@ -80,26 +81,26 @@ const validate = (data, schema) => {
   return { error };
 };
 
-// Create event (protected)
+// Create HomeEvent (protected)
 router.post('/', authMiddleware, sanitizeEvent, asyncHandler(async (req, res) => {
   const { error } = validate(req.body, eventValidation);
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   // Get max order from active events only
-  const lastEvent = await Event.findOne({ active: true }).sort('-order');
+  const lastEvent = await HomeEvent.findOne({ active: true }).sort('-order');
   const order = lastEvent ? lastEvent.order + 1 : 0;
 
-  const event = new Event({
+  const HomeEvent = new HomeEvent({
     ...req.body,
     order,
     active: req.body.active !== undefined ? req.body.active : true
   });
 
-  await event.save();
-  res.status(201).json(event);
+  await HomeEvent.save();
+  res.status(201).json(HomeEvent);
 }));
 
-// Update event (protected)
+// Update HomeEvent (protected)
 router.put('/:id', authMiddleware, sanitizeEvent, asyncHandler(async (req, res) => {
   const { error } = validate(req.body, eventValidation);
   if (error) return res.status(400).json({
@@ -110,57 +111,57 @@ router.put('/:id', authMiddleware, sanitizeEvent, asyncHandler(async (req, res) 
     }))
   });
 
-  const event = await Event.findByIdAndUpdate(
+  const HomeEvent = await HomeEvent.findByIdAndUpdate(
     req.params.id,
     { ...req.body, order: undefined }, // Prevent order changes via PUT
     { new: true, runValidators: true }
   );
 
-  if (!event) {
-    return res.status(404).json({ message: 'Event not found' });
+  if (!HomeEvent) {
+    return res.status(404).json({ message: 'HomeEvent not found' });
   }
 
-  res.json(event);
+  res.json(HomeEvent);
 }));
 
-// Toggle event active status (protected)
+// Toggle HomeEvent active status (protected)
 router.patch('/:id/toggle-active', authMiddleware, asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   
   try {
     await session.withTransaction(async () => {
-      const event = await Event.findById(req.params.id).session(session);
-      if (!event) throw new Error('Event not found');
+      const HomeEvent = await HomeEvent.findById(req.params.id).session(session);
+      if (!HomeEvent) throw new Error('HomeEvent not found');
 
-      const currentStatus = event.active;
-      const oldOrder = event.order;
+      const currentStatus = HomeEvent.active;
+      const oldOrder = HomeEvent.order;
 
-      event.active = !currentStatus;
+      HomeEvent.active = !currentStatus;
 
       if (currentStatus) {
         // Deactivating: Set order to -1 and shift others up
-        event.order = -1;
-        await event.save({ session });
+        HomeEvent.order = -1;
+        await HomeEvent.save({ session });
         
-        await Event.updateMany(
+        await HomeEvent.updateMany(
           { active: true, order: { $gt: oldOrder } },
           { $inc: { order: -1 } },
           { session }
         );
       } else {
         // Activating: Place at the end of active events
-        const lastActiveEvent = await Event.findOne({ active: true })
+        const lastActiveEvent = await HomeEvent.findOne({ active: true })
           .sort('-order') // Corrected sort direction
           .session(session);
 
-        event.order = (lastActiveEvent?.order ?? -1) + 1;
-        await event.save({ session });
+        HomeEvent.order = (lastActiveEvent?.order ?? -1) + 1;
+        await HomeEvent.save({ session });
       }
     });
 
     // Fetch fresh data correctly sorted
-    const activeEvents = await Event.find({ active: true }).sort('order');
-    const inactiveEvents = await Event.find({ active: false }).sort('-updatedAt');
+    const activeEvents = await HomeEvent.find({ active: true }).sort('order');
+    const inactiveEvents = await HomeEvent.find({ active: false }).sort('-updatedAt');
     res.json([...activeEvents, ...inactiveEvents]);
 
   } catch (error) {
@@ -179,28 +180,28 @@ router.patch('/:id/order',
     
     try {
       await session.withTransaction(async () => {
-        const event = await Event.findById(req.params.id).session(session);
-        if (!event) throw new Error('Event not found');
+        const HomeEvent = await HomeEvent.findById(req.params.id).session(session);
+        if (!HomeEvent) throw new Error('HomeEvent not found');
 
-        const oldOrder = event.order;
-        event.order = order;
-        await event.save({ session });
+        const oldOrder = HomeEvent.order;
+        HomeEvent.order = order;
+        await HomeEvent.save({ session });
 
         // Adjust other orders
         if (order < oldOrder) {
-          await Event.updateMany(
+          await HomeEvent.updateMany(
             { 
               order: { $gte: order, $lt: oldOrder },
-              _id: { $ne: event._id }
+              _id: { $ne: HomeEvent._id }
             },
             { $inc: { order: 1 } },
             { session }
           );
         } else {
-          await Event.updateMany(
+          await HomeEvent.updateMany(
             { 
               order: { $gt: oldOrder, $lte: order },
-              _id: { $ne: event._id }
+              _id: { $ne: HomeEvent._id }
             },
             { $inc: { order: -1 } },
             { session }
@@ -208,7 +209,7 @@ router.patch('/:id/order',
         }
       });
 
-      const updatedEvents = await Event.find().sort('order');
+      const updatedEvents = await HomeEvent.find().sort('order');
       res.json(updatedEvents);
     } catch (error) {
       console.error('Order update error:', error);
@@ -219,21 +220,21 @@ router.patch('/:id/order',
   })
 );
 
-// Delete event (protected)
+// Delete HomeEvent (protected)
 router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
-  const event = await Event.findByIdAndDelete(req.params.id);
+  const HomeEvent = await HomeEvent.findByIdAndDelete(req.params.id);
   
-  if (!event) {
-    return res.status(404).json({ message: 'Event not found' });
+  if (!HomeEvent) {
+    return res.status(404).json({ message: 'HomeEvent not found' });
   }
 
   // Reorder remaining events
-  await Event.updateMany(
-    { order: { $gt: event.order } },
+  await HomeEvent.updateMany(
+    { order: { $gt: HomeEvent.order } },
     { $inc: { order: -1 } }
   );
 
-  res.json({ message: 'Event deleted successfully' });
+  res.json({ message: 'HomeEvent deleted successfully' });
 }));
 
 export default router;

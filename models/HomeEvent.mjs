@@ -1,7 +1,8 @@
-// backend/models/Event.mjs
+// backend/models/HomeEvent.mjs
+// Model for Home Page "Upcoming Events" Section
 import mongoose from 'mongoose';
 
-const eventSchema = new mongoose.Schema({
+const homeEventSchema = new mongoose.Schema({
   title: {
     text: { type: String, required: true },
     color: { type: String, default: '#606161' }
@@ -37,6 +38,6 @@ const eventSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-eventSchema.index({ order: 1 });
+homeEventSchema.index({ order: 1 });
 
-export default mongoose.model('Event', eventSchema);
+export default mongoose.model('HomeEvent', homeEventSchema, 'events');
