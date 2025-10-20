@@ -107,6 +107,23 @@ const pageEventSchema = new mongoose.Schema({
     default: ''
   },
   
+  // Gallery Albums
+  galleryAlbums: [{
+    name: { type: String, required: true }, // e.g., "Sessions", "Panel", "Talks"
+    description: { type: String, default: '' },
+    order: { type: Number, default: 0 }, // Display order
+    media: [{
+      url: { type: String, required: true },
+      type: { type: String, enum: ['image', 'video'], default: 'image' },
+      alt: { type: String, default: '' },
+      caption: { type: String, default: '' }
+    }]
+  }],
+  galleryHeadline: {
+    type: String,
+    default: ''
+  },
+  
   // Media
   coverImage: {
     url: { type: String, required: true },
