@@ -13,18 +13,30 @@ const router = express.Router();
 
 /**
  * GET /api/page-events/featured
- * Get the next upcoming event (featured event)
+ * Get the featured event (manually set) or next upcoming event
  */
 router.get('/featured', asyncHandler(async (req, res) => {
   const now = new Date();
   now.setHours(0, 0, 0, 0); // Start of today
   
-  const featuredEvent = await PageEvent.findOne({
+  // First, try to find a manually featured event
+  let featuredEvent = await PageEvent.findOne({
     active: true,
-    eventDate: { $gte: now }
+    isFeatured: true,
+    eventDate: { $gte: now } // Must be upcoming
   })
-  .sort({ eventDate: 1 }) // Ascending - get the nearest upcoming event
+  .sort({ eventDate: 1 })
   .lean();
+  
+  // If no manual featured event, get the next upcoming event
+  if (!featuredEvent) {
+    featuredEvent = await PageEvent.findOne({
+      active: true,
+      eventDate: { $gte: now }
+    })
+    .sort({ eventDate: 1 }) // Ascending - get the nearest upcoming event
+    .lean();
+  }
   
   if (!featuredEvent) {
     return res.json(null); // No upcoming events
@@ -303,6 +315,45 @@ router.patch('/:id/toggle-active', authMiddleware, asyncHandler(async (req, res)
   } finally {
     session.endSession();
   }
+}));
+
+/**
+ * PATCH /api/page-events/:id/set-featured
+ * Set event as featured (protected)
+ * Only one upcoming event can be featured at a time
+ */
+router.patch('/:id/set-featured', authMiddleware, asyncHandler(async (req, res) => {
+  const { isFeatured } = req.body;
+  
+  const event = await PageEvent.findById(req.params.id);
+  if (!event) {
+    return res.status(404).json({ message: 'Event not found' });
+  }
+  
+  // Check if event is active
+  if (!event.active && isFeatured) {
+    return res.status(400).json({ message: 'Only active events can be featured. Please activate the event first.' });
+  }
+  
+  // Check if event is upcoming
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  if (event.eventDate < now) {
+    return res.status(400).json({ message: 'Only upcoming events can be featured' });
+  }
+  
+  if (isFeatured) {
+    // Unset any other featured events
+    await PageEvent.updateMany(
+      { isFeatured: true, _id: { $ne: req.params.id } },
+      { isFeatured: false }
+    );
+  }
+  
+  event.isFeatured = isFeatured;
+  await event.save();
+  
+  res.json(event);
 }));
 
 /**

@@ -124,6 +124,35 @@ const pageEventSchema = new mongoose.Schema({
     default: ''
   },
   
+  // Registration (for upcoming events)
+  registration: {
+    headline: { type: String, default: '' },
+    description: { type: String, default: '' },
+    buttonText: { type: String, default: 'Register Now' },
+    isFree: { type: Boolean, default: true },
+    benefits: [{ type: String }], // List of registration benefits
+    deadline: { type: Date }, // Registration deadline
+    spots: {
+      available: { type: Number, min: 0 },
+      total: { type: Number, min: 0 }
+    }
+  },
+  
+  // Testimonials (for past events)
+  testimonials: [{
+    name: { type: String, required: true },
+    role: { type: String, default: '' },
+    company: { type: String, default: '' },
+    image: { type: String, default: '' },
+    rating: { type: Number, min: 1, max: 5, default: 5 },
+    comment: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+  }],
+  testimonialsHeadline: {
+    type: String,
+    default: ''
+  },
+  
   // Media
   coverImage: {
     url: { type: String, required: true },
@@ -154,6 +183,11 @@ const pageEventSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: true,
+    index: true
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false,
     index: true
   }
 }, { 

@@ -21,6 +21,7 @@ import awardsRoutes from './routes/awards.mjs';
 import timelineRoutes from './routes/timeline.mjs';
 import seasonsRoutes from './routes/seasons.mjs';
 import ctaRoutes from './routes/cta.mjs';
+import formRoutes from './routes/forms.mjs';
 
 dotenv.config();
 
@@ -74,6 +75,7 @@ app.use('/api/awards', awardsRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/seasons', seasonsRoutes);
 app.use('/api/cta', ctaRoutes);
+app.use('/api/forms', formRoutes);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 
