@@ -22,6 +22,9 @@ import timelineRoutes from './routes/timeline.mjs';
 import seasonsRoutes from './routes/seasons.mjs';
 import ctaRoutes from './routes/cta.mjs';
 import formRoutes from './routes/forms.mjs';
+import trainingsRoutes from './routes/trainings.mjs';
+import trainingHeroRoutes from './routes/trainingHero.mjs';
+import trainingCTARoutes from './routes/trainingCTA.mjs';
 
 dotenv.config();
 
@@ -76,6 +79,9 @@ app.use('/api/timeline', timelineRoutes);
 app.use('/api/seasons', seasonsRoutes);
 app.use('/api/cta', ctaRoutes);
 app.use('/api/forms', formRoutes);
+app.use('/api/trainings', trainingsRoutes);
+app.use('/api/training-hero', trainingHeroRoutes);
+app.use('/api/training-cta', trainingCTARoutes);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 
