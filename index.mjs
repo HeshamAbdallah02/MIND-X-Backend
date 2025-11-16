@@ -11,7 +11,7 @@ import homeEventRoutes from './routes/homeEvents.mjs'; // Home page upcoming eve
 import pageEventRoutes from './routes/pageEvents.mjs'; // Events page
 import uploadRoutes from './routes/upload.mjs';
 import headerRoutes from './routes/header.mjs';
-import blogRoutes from './routes/blog.mjs';
+import blogRoutes from './routes/blogs.mjs';
 import cleanupTempUploads from './scripts/cleanupTempUploads.js';
 import brandSettingsRoutes from './routes/brandSettings.mjs';
 import statRoutes from './routes/stats.mjs';

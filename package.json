@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.mjs",
-    "seed:seasons": "node scripts/seedSeasons.js"
+    "seed:seasons": "node scripts/seedSeasons.js",
+    "seed:blogs": "node seeds/seedBlogs.js"
   },
   "keywords": [],
   "author": "",
