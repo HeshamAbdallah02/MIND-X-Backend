@@ -25,6 +25,7 @@ import formRoutes from './routes/forms.mjs';
 import trainingsRoutes from './routes/trainings.mjs';
 import trainingHeroRoutes from './routes/trainingHero.mjs';
 import trainingCTARoutes from './routes/trainingCTA.mjs';
+import membersRoutes from './routes/members.mjs';
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use((req, res, next) => {
   if (!process.env.CLOUDINARY_API_KEY) {
     console.error('Cloudinary configuration missing');
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Server configuration error',
       details: 'Image upload service not configured'
     });
@@ -82,6 +83,7 @@ app.use('/api/forms', formRoutes);
 app.use('/api/trainings', trainingsRoutes);
 app.use('/api/training-hero', trainingHeroRoutes);
 app.use('/api/training-cta', trainingCTARoutes);
+app.use('/api/members', membersRoutes);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 
@@ -99,7 +101,7 @@ app.get('/db-check', async (req, res) => {
     await mongoose.connection.db.admin().ping();
     res.json({ status: 'Connected' });
   } catch (err) {
-    res.status(500).json({ 
+    res.status(500).json({
       error: err.message,
       connection: mongoose.connection.readyState
     });
