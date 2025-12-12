@@ -100,18 +100,57 @@ memberSchema.index({ status: 1, position: 1 });
 memberSchema.index({ section: 1, status: 1 });
 memberSchema.index({ displayOrder: 1 });
 
-// Generate slug from name
-memberSchema.pre('save', function (next) {
-    if (this.isModified('name') && !this.slug) {
-        this.slug = this.name
-            .toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
+// Helper function to generate base slug from name
+const generateBaseSlug = (name) => {
+    return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+};
 
-        // Add timestamp to ensure uniqueness
-        this.slug += `-${Date.now()}`;
+// Generate unique slug from name
+memberSchema.pre('save', async function (next) {
+    // Generate slug if name changed and no slug exists
+    if (this.isModified('name') && !this.slug) {
+        const baseSlug = generateBaseSlug(this.name);
+
+        // Check if base slug is available
+        const Member = mongoose.model('Member');
+        const existingWithBase = await Member.findOne({ slug: baseSlug });
+
+        if (!existingWithBase) {
+            // Base slug is available, use it directly
+            this.slug = baseSlug;
+        } else {
+            // Find the next available number suffix
+            // Look for slugs that start with the base slug and have a number suffix
+            const existingMembers = await Member.find({
+                slug: { $regex: `^${baseSlug}(-\\d+)?$` }
+            }).select('slug');
+
+            // Extract existing numbers
+            const usedNumbers = new Set([0]); // 0 represents the base slug without number
+            existingMembers.forEach(m => {
+                if (m.slug === baseSlug) {
+                    usedNumbers.add(0);
+                } else {
+                    const match = m.slug.match(new RegExp(`^${baseSlug}-(\\d+)$`));
+                    if (match) {
+                        usedNumbers.add(parseInt(match[1]));
+                    }
+                }
+            });
+
+            // Find the lowest available number (starting from 2)
+            let suffix = 2;
+            while (usedNumbers.has(suffix)) {
+                suffix++;
+            }
+
+            this.slug = `${baseSlug}-${suffix}`;
+        }
     }
 
     // Validate section requirement based on position
