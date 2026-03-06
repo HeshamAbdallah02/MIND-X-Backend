@@ -23,15 +23,15 @@ const blogSchema = new mongoose.Schema({
   author: {
     name: { type: String, required: true },
     role: { type: String },
-    avatar: { 
+    avatar: {
       url: String,
-      publicId: String
+      public_id: String
     },
     bio: String
   },
   coverImage: {
     url: { type: String },
-    publicId: String,
+    public_id: String,
     alt: String
   },
   category: {
@@ -79,7 +79,7 @@ const blogSchema = new mongoose.Schema({
     ref: 'Admin',
     required: true
   }
-}, { 
+}, {
   timestamps: true,
   collection: 'blogs'
 });
@@ -91,7 +91,7 @@ blogSchema.index({ featured: 1, status: 1 });
 blogSchema.index({ tags: 1 });
 
 // Generate slug from title
-blogSchema.pre('save', function(next) {
+blogSchema.pre('save', function (next) {
   if (this.isModified('title') && !this.slug) {
     this.slug = this.title
       .toLowerCase()
@@ -99,22 +99,22 @@ blogSchema.pre('save', function(next) {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
-    
+
     // Add timestamp to ensure uniqueness
     this.slug += `-${Date.now()}`;
   }
-  
+
   // Calculate read time (average 200 words per minute)
   if (this.isModified('content')) {
     const wordCount = this.content.split(/\s+/).length;
     this.readTime = Math.ceil(wordCount / 200);
   }
-  
+
   // Set publishedAt when status changes to published
   if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  
+
   next();
 });
 

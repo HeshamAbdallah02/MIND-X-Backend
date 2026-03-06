@@ -6,7 +6,7 @@ const tempUploadSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  publicId: {
+  public_id: {
     type: String,
     required: true
   },

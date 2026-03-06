@@ -16,40 +16,40 @@ const settingsValidation = Joi.object({
     alt: Joi.string().allow('')
   }).optional(),
 
-  missionText:  Joi.string().optional(),
-  visionText:   Joi.string().optional(),
-  missionBgColor:   Joi.string().pattern(colorPattern).optional(),
-  visionBgColor:    Joi.string().pattern(colorPattern).optional(),
+  missionText: Joi.string().optional(),
+  visionText: Joi.string().optional(),
+  missionBgColor: Joi.string().pattern(colorPattern).optional(),
+  visionBgColor: Joi.string().pattern(colorPattern).optional(),
   missionTextColor: Joi.string().pattern(colorPattern).optional(),
-  visionTextColor:  Joi.string().pattern(colorPattern).optional(),
+  visionTextColor: Joi.string().pattern(colorPattern).optional(),
 
   sponsorsColors: Joi.object({
     sectionBackground: Joi.string().pattern(colorPattern),
-    titleColor:        Joi.string().pattern(colorPattern),
-    sponsorsSpeed:     Joi.number().integer().min(50).max(300),
-    partnersSpeed:     Joi.number().integer().min(50).max(300)
+    titleColor: Joi.string().pattern(colorPattern),
+    sponsorsSpeed: Joi.number().integer().min(50).max(300),
+    partnersSpeed: Joi.number().integer().min(50).max(300)
   }).optional(),
 
   statsColors: Joi.object({
-    sectionBackground:  Joi.string().pattern(colorPattern).optional(),
-    titleColor:         Joi.string().pattern(colorPattern).optional(),
-    iconColor:          Joi.string().pattern(colorPattern).optional(),
-    numberColor:        Joi.string().pattern(colorPattern).optional(),
-    textPrimary:        Joi.string().pattern(colorPattern).optional(),
-    feedbackTextColor:  Joi.string().pattern(colorPattern).optional()
+    sectionBackground: Joi.string().pattern(colorPattern).optional(),
+    titleColor: Joi.string().pattern(colorPattern).optional(),
+    iconColor: Joi.string().pattern(colorPattern).optional(),
+    numberColor: Joi.string().pattern(colorPattern).optional(),
+    textPrimary: Joi.string().pattern(colorPattern).optional(),
+    feedbackTextColor: Joi.string().pattern(colorPattern).optional()
   }).optional(),
 
   testimonialsColors: Joi.object({
-    sectionBackground:   Joi.string().pattern(colorPattern).optional(),
-    titleColor:          Joi.string().pattern(colorPattern).optional(),
-    circleBorderColor:   Joi.string().pattern(colorPattern).optional(),
-    quoteIconColor:      Joi.string().pattern(colorPattern).optional(),
+    sectionBackground: Joi.string().pattern(colorPattern).optional(),
+    titleColor: Joi.string().pattern(colorPattern).optional(),
+    circleBorderColor: Joi.string().pattern(colorPattern).optional(),
+    quoteIconColor: Joi.string().pattern(colorPattern).optional(),
     quoteIconBackground: Joi.string().pattern(colorPattern).optional(),
-    nameColor:           Joi.string().pattern(colorPattern).optional(),
-    positionColor:       Joi.string().pattern(colorPattern).optional(),
-    feedbackBackground:  Joi.string().pattern(colorPattern).optional(),
+    nameColor: Joi.string().pattern(colorPattern).optional(),
+    positionColor: Joi.string().pattern(colorPattern).optional(),
+    feedbackBackground: Joi.string().pattern(colorPattern).optional(),
     feedbackBorderColor: Joi.string().pattern(colorPattern).optional(),
-    feedbackTextColor:   Joi.string().pattern(colorPattern).optional()
+    feedbackTextColor: Joi.string().pattern(colorPattern).optional()
   }).optional(),
 
   footerLogo: Joi.object({
@@ -60,18 +60,18 @@ const settingsValidation = Joi.object({
   footerSlogan: Joi.string().max(150).optional(),
 
   footerColors: Joi.object({
-    background:     Joi.string().pattern(colorPattern).optional(),
-    titleColor:     Joi.string().pattern(colorPattern).optional(),
-    textColor:      Joi.string().pattern(colorPattern).optional(),
-    linkColor:      Joi.string().pattern(colorPattern).optional(),
-    inputBgColor:   Joi.string().pattern(colorPattern).optional(),
+    background: Joi.string().pattern(colorPattern).optional(),
+    titleColor: Joi.string().pattern(colorPattern).optional(),
+    textColor: Joi.string().pattern(colorPattern).optional(),
+    linkColor: Joi.string().pattern(colorPattern).optional(),
+    inputBgColor: Joi.string().pattern(colorPattern).optional(),
     inputTextColor: Joi.string().pattern(colorPattern).optional(),
-    buttonBgColor:  Joi.string().pattern(colorPattern).optional(),
-    buttonTextColor:Joi.string().pattern(colorPattern).optional()
+    buttonBgColor: Joi.string().pattern(colorPattern).optional(),
+    buttonTextColor: Joi.string().pattern(colorPattern).optional()
   }).optional()
 })
-.unknown(true)    // allow `_id`, `__v`, timestamps, any other extra keys
-.min(1);          // require at least one field in the payload
+  .unknown(true)    // allow `_id`, `__v`, timestamps, any other extra keys
+  .min(1);          // require at least one field in the payload
 
 // GET current settings
 router.get('/', asyncHandler(async (_req, res) => {
@@ -79,17 +79,17 @@ router.get('/', asyncHandler(async (_req, res) => {
   if (!settings) {
     settings = await Settings.create({
       logo: { url: '/default-logo.png', alt: 'MIND‑X Logo' },
-      missionText:  "To inspire and empower…",
-      visionText:   "To be the catalyst…",
-      missionBgColor:   '#FBB859',
-      visionBgColor:    '#81C99C',
+      missionText: "To inspire and empower…",
+      visionText: "To be the catalyst…",
+      missionBgColor: '#FBB859',
+      visionBgColor: '#81C99C',
       missionTextColor: '#606161',
-      visionTextColor:  '#606161',
+      visionTextColor: '#606161',
       sponsorsColors: {
         sectionBackground: '#ffffff',
-        titleColor:        '#606161',
-        sponsorsSpeed:     100,
-        partnersSpeed:     100
+        titleColor: '#606161',
+        sponsorsSpeed: 100,
+        partnersSpeed: 100
       },
       footerLogo: { url: '/default-logo.png', alt: 'MIND‑X Logo' },
       footerSlogan: 'Empowering students through innovation.',
@@ -101,13 +101,12 @@ router.get('/', asyncHandler(async (_req, res) => {
 
 // PUT update settings
 router.put('/', authMiddleware, asyncHandler(async (req, res) => {
-  console.log('Received update request:', req.body);
 
   // 1️⃣ Validate only the incoming payload
   const { error } = settingsValidation.validate(req.body, { abortEarly: false });
   if (error) {
     const details = error.details.map(d => ({
-      field:   d.path.join('.'),
+      field: d.path.join('.'),
       message: d.message.replace(/['"]/g, '')
     }));
     return res.status(400).json({ message: 'Validation failed', details });
@@ -130,10 +129,9 @@ router.put('/', authMiddleware, asyncHandler(async (req, res) => {
 
 // Change PUT to PATCH for partial updates
 router.patch('/', authMiddleware, asyncHandler(async (req, res) => {
-  console.log('Received update request:', req.body);
 
   // Validate only the incoming payload
-  const { error } = settingsValidation.validate(req.body, { 
+  const { error } = settingsValidation.validate(req.body, {
     abortEarly: false,
     allowUnknown: true
   });
@@ -145,7 +143,7 @@ router.patch('/', authMiddleware, asyncHandler(async (req, res) => {
       type: d.type
     }));
     console.error('Validation error:', details);
-    return res.status(400).json({ 
+    return res.status(400).json({
       message: 'Validation failed',
       errors: details
     });
@@ -164,7 +162,6 @@ router.patch('/', authMiddleware, asyncHandler(async (req, res) => {
       }
     );
 
-    console.log('Successful update:', updated);
     res.json(updated);
   } catch (dbError) {
     console.error('Database error:', dbError);

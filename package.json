@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node index.mjs",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:auth": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/auth.test.mjs",
+    "test:cloudinary": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/cloudinary.test.mjs",
+    "smoke": "node scripts/smokeTest.mjs",
     "seed:seasons": "node scripts/seedSeasons.js",
     "seed:blogs": "node seeds/seedBlogs.js"
   },
@@ -28,6 +32,10 @@
     "passport-jwt": "^4.0.1"
   },
   "devDependencies": {
-    "@types/node": "^22.13.1"
+    "@jest/globals": "^30.2.0",
+    "@types/node": "^22.13.1",
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
   }
 }

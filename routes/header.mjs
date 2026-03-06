@@ -24,7 +24,7 @@ router.get('/', async (_req, res) => {
         }
       });
     }
-    
+
     res.json(header);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching header configuration' });
@@ -35,11 +35,11 @@ router.get('/', async (_req, res) => {
 router.put('/', authMiddleware, async (req, res) => {
   try {
     let header = await Header.findOne();
-    
+
     if (!header) {
       header = new Header();
     }
-    
+
     // Update fields
     if (req.body.logo) header.logo = req.body.logo;
     if (req.body.colors) header.colors = req.body.colors;
@@ -54,24 +54,24 @@ router.put('/', authMiddleware, async (req, res) => {
 // Update logo
 router.put('/logo', authMiddleware, async (req, res) => {
   try {
-    const { imageUrl, publicId } = req.body.logo;
-    
+    const { imageUrl, public_id } = req.body.logo;
+
     let header = await Header.findOne();
     if (!header) header = new Header();
-    
-    header.logo = { 
+
+    header.logo = {
       imageUrl,
-      publicId,
+      public_id,
       altText: header.logo?.altText || 'MIND-X Logo'
     };
-    
+
     await header.save();
     res.json(header);
   } catch (error) {
     console.error('Logo update error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error updating logo',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -80,11 +80,11 @@ router.put('/logo', authMiddleware, async (req, res) => {
 router.put('/colors', authMiddleware, async (req, res) => {
   try {
     let header = await Header.findOne();
-    
+
     if (!header) {
       header = new Header();
     }
-    
+
     header.colors = req.body.colors;
     await header.save();
     res.json(header);

@@ -26,25 +26,31 @@ import trainingsRoutes from './routes/trainings.mjs';
 import trainingHeroRoutes from './routes/trainingHero.mjs';
 import trainingCTARoutes from './routes/trainingCTA.mjs';
 import membersRoutes from './routes/members.mjs';
+import dailyLifeRoutes from './routes/dailyLife.mjs';
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json()); // Add this line to parse JSON request bodies
-app.use((err, _req, res, _next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error' });
-});
+// CORS configuration — whitelist allowed origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
-console.log("Server starting...");
-console.log("Cloudinary Config:", {
-  name: process.env.CLOUDINARY_CLOUD_NAME,
-  key: process.env.CLOUDINARY_API_KEY ? "exists" : "missing",
-  secret: process.env.CLOUDINARY_API_SECRET ? "exists" : "missing"
-});
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
+  credentials: true
+}));
+app.use(express.json());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -84,6 +90,7 @@ app.use('/api/trainings', trainingsRoutes);
 app.use('/api/training-hero', trainingHeroRoutes);
 app.use('/api/training-cta', trainingCTARoutes);
 app.use('/api/members', membersRoutes);
+app.use('/api/daily-life', dailyLifeRoutes);
 
 setInterval(cleanupTempUploads, 3600000); // 1 hour
 
@@ -106,6 +113,12 @@ app.get('/db-check', async (req, res) => {
       connection: mongoose.connection.readyState
     });
   }
+});
+
+// Error handler — MUST be after all routes
+app.use((err, _req, res, _next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
 const PORT = process.env.PORT || 5000;

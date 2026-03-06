@@ -20,7 +20,7 @@ const upload = multer({
       'image/webp',
       'image/svg+xml'
     ];
-    
+
     if (!allowedTypes.includes(file.mimetype)) {
       const error = new Error('Invalid file type');
       error.code = 'INVALID_FILE_TYPE';
@@ -39,23 +39,23 @@ const handleMulterUpload = (req, res, next) => {
         message: err.message,
         stack: err.stack
       });
-      
+
       const status = err.code === 'INVALID_FILE_TYPE' ? 400 : 500;
       return res.status(status).json({
-        error: err.code === 'LIMIT_FILE_SIZE' ? 
-          'File too large (max 10MB)' : 
+        error: err.code === 'LIMIT_FILE_SIZE' ?
+          'File too large (max 10MB)' :
           'File upload failed',
         code: err.code || 'UPLOAD_ERROR'
       });
     }
-    
+
     if (!req.file) {
       return res.status(400).json({
         error: 'No file received',
         code: 'MISSING_FILE'
       });
     }
-    
+
     next();
   });
 };
@@ -63,12 +63,7 @@ const handleMulterUpload = (req, res, next) => {
 // 3. Upload Endpoint with Cloudinary Debugging
 router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
   try {
-    console.log('Upload Request Received:', {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      headers: req.headers
-    });
+
 
     // Create read stream from buffer
     const bufferStream = new Readable();
@@ -91,23 +86,19 @@ router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
               http_code: error.http_code,
               error
             });
-            
+
             // Provide more specific error messages
             let errorMessage = error.message;
             if (error.message && error.message.includes('file size too large')) {
               errorMessage = 'Image file is too large. Please use an image under 10MB.';
             }
-            
+
             reject({
               code: 'CLOUDINARY_ERROR',
               message: errorMessage
             });
           } else {
-            console.log('Cloudinary Upload Success:', {
-              public_id: result.public_id,
-              bytes: result.bytes,
-              url: result.secure_url
-            });
+
             resolve(result);
           }
         }
@@ -129,7 +120,7 @@ router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
     res.json({
       success: true,
       url: result.secure_url,
-      publicId: result.public_id,
+      public_id: result.public_id,
       format: result.format
     });
 
@@ -141,7 +132,7 @@ router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
         size: req.file.size
       } : null
     });
-    
+
     res.status(500).json({
       error: error.message || 'Upload failed',
       code: error.code || 'UPLOAD_FAILURE',
@@ -157,7 +148,7 @@ router.post('/', authMiddleware, handleMulterUpload, async (req, res) => {
 router.delete('/:publicId', authMiddleware, async (req, res) => {
   try {
     const { publicId } = req.params;
-    
+
     if (!publicId) {
       return res.status(400).json({ error: 'Missing public ID' });
     }
@@ -168,10 +159,9 @@ router.delete('/:publicId', authMiddleware, async (req, res) => {
       invalidate: true
     });
 
-    console.log('Cloudinary Delete Result:', result);
 
     if (result.result !== 'ok') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Failed to delete image',
         details: result
       });
@@ -184,7 +174,7 @@ router.delete('/:publicId', authMiddleware, async (req, res) => {
       error: error.message,
       publicId: req.params.publicId
     });
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Delete failed',
       code: 'DELETE_ERROR'
     });

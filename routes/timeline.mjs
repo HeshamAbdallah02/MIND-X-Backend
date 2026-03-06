@@ -1,55 +1,19 @@
 // backend/routes/timeline.mjs
 import express from 'express';
-import multer from 'multer';
-import cloudinary from '../config/cloudinary.mjs';
-import { Readable } from 'stream';
 import TimelineSection from '../models/TimelineSection.mjs';
 import TimelinePhase from '../models/TimelinePhase.mjs';
 import authMiddleware from '../middleware/auth.mjs';
 import asyncHandler from '../middleware/asyncHandler.mjs';
+import { upload, uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.mjs';
 
 const router = express.Router();
-
-// Configure multer for image uploads
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  }
-});
-
-// Helper function to upload to Cloudinary
-const uploadToCloudinary = (buffer, originalname) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'image',
-        folder: 'timeline-phases',
-        public_id: `phase_${Date.now()}_${originalname.split('.')[0]}`
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
-    
-    const readable = Readable.from(buffer);
-    readable.pipe(stream);
-  });
-};
 
 // ==================== PUBLIC ROUTES ====================
 
 // Helper function to get or create default journey section
 const getOrCreateDefaultJourneySection = async () => {
   let section = await TimelineSection.findOne({ title: 'Our Journey' });
-  
+
   if (!section) {
     section = new TimelineSection({
       title: 'Our Journey',
@@ -63,7 +27,7 @@ const getOrCreateDefaultJourneySection = async () => {
     });
     await section.save();
   }
-  
+
   return section;
 };
 
@@ -116,9 +80,9 @@ router.get('/', asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching timeline data:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to fetch timeline data',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -145,9 +109,9 @@ router.get('/sections', asyncHandler(async (req, res) => {
     res.json(transformedSections);
   } catch (error) {
     console.error('Error fetching timeline sections:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to fetch timeline sections',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -156,10 +120,10 @@ router.get('/sections', asyncHandler(async (req, res) => {
 router.get('/sections/:sectionId/phases', asyncHandler(async (req, res) => {
   try {
     const { sectionId } = req.params;
-    
-    const phases = await TimelinePhase.find({ 
-      sectionId, 
-      isActive: true 
+
+    const phases = await TimelinePhase.find({
+      sectionId,
+      isActive: true
     })
       .sort({ order: 1 })
       .lean();
@@ -184,9 +148,9 @@ router.get('/sections/:sectionId/phases', asyncHandler(async (req, res) => {
     res.json(transformedPhases);
   } catch (error) {
     console.error('Error fetching timeline phases:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to fetch timeline phases',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -196,7 +160,7 @@ router.get('/phases', authMiddleware, asyncHandler(async (req, res) => {
   try {
     // Ensure default section exists
     const defaultSection = await getOrCreateDefaultJourneySection();
-    
+
     const phases = await TimelinePhase.find({ sectionId: defaultSection._id })
       .populate('sectionId', 'title')
       .sort({ year: -1, order: 1 })
@@ -224,9 +188,9 @@ router.get('/phases', authMiddleware, asyncHandler(async (req, res) => {
     res.status(200).json(transformedPhases);
   } catch (error) {
     console.error('Error fetching all timeline phases:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to fetch timeline phases',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -263,9 +227,9 @@ router.post('/sections', authMiddleware, asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating timeline section:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to create timeline section',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -274,7 +238,7 @@ router.post('/sections', authMiddleware, asyncHandler(async (req, res) => {
 router.put('/sections/:sectionId', authMiddleware, asyncHandler(async (req, res) => {
   try {
     const { sectionId } = req.params;
-    
+
     const section = await TimelineSection.findById(sectionId);
     if (!section) {
       return res.status(404).json({ message: 'Timeline section not found' });
@@ -305,9 +269,9 @@ router.put('/sections/:sectionId', authMiddleware, asyncHandler(async (req, res)
     });
   } catch (error) {
     console.error('Error updating timeline section:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to update timeline section',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -316,7 +280,7 @@ router.put('/sections/:sectionId', authMiddleware, asyncHandler(async (req, res)
 router.delete('/sections/:sectionId', authMiddleware, asyncHandler(async (req, res) => {
   try {
     const { sectionId } = req.params;
-    
+
     // Delete section
     const section = await TimelineSection.findByIdAndDelete(sectionId);
     if (!section) {
@@ -326,15 +290,15 @@ router.delete('/sections/:sectionId', authMiddleware, asyncHandler(async (req, r
     // Delete all phases associated with this section
     await TimelinePhase.deleteMany({ sectionId });
 
-    res.json({ 
+    res.json({
       message: 'Timeline section and associated phases deleted successfully',
       deletedSection: section._id.toString()
     });
   } catch (error) {
     console.error('Error deleting timeline section:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to delete timeline section',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -344,7 +308,7 @@ router.post('/phases', authMiddleware, asyncHandler(async (req, res) => {
   try {
     // Ensure default section exists and use it if no sectionId provided
     const defaultSection = await getOrCreateDefaultJourneySection();
-    
+
     const phaseData = {
       year: req.body.year,
       headline: req.body.headline,
@@ -363,8 +327,8 @@ router.post('/phases', authMiddleware, asyncHandler(async (req, res) => {
 
     // Validate required fields
     if (!phaseData.year || !phaseData.headline || !phaseData.description) {
-      return res.status(400).json({ 
-        message: 'Missing required fields: year, headline, and description are required' 
+      return res.status(400).json({
+        message: 'Missing required fields: year, headline, and description are required'
       });
     }
 
@@ -396,9 +360,9 @@ router.post('/phases', authMiddleware, asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating timeline phase:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to create timeline phase',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -407,7 +371,7 @@ router.post('/phases', authMiddleware, asyncHandler(async (req, res) => {
 router.put('/phases/:phaseId', authMiddleware, asyncHandler(async (req, res) => {
   try {
     const { phaseId } = req.params;
-    
+
     const phase = await TimelinePhase.findById(phaseId);
     if (!phase) {
       return res.status(404).json({ message: 'Timeline phase not found' });
@@ -455,9 +419,9 @@ router.put('/phases/:phaseId', authMiddleware, asyncHandler(async (req, res) => 
     });
   } catch (error) {
     console.error('Error updating timeline phase:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to update timeline phase',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -466,21 +430,21 @@ router.put('/phases/:phaseId', authMiddleware, asyncHandler(async (req, res) => 
 router.delete('/phases/:phaseId', authMiddleware, asyncHandler(async (req, res) => {
   try {
     const { phaseId } = req.params;
-    
+
     const phase = await TimelinePhase.findByIdAndDelete(phaseId);
     if (!phase) {
       return res.status(404).json({ message: 'Timeline phase not found' });
     }
 
-    res.json({ 
+    res.json({
       message: 'Timeline phase deleted successfully',
       deletedPhase: phase._id.toString()
     });
   } catch (error) {
     console.error('Error deleting timeline phase:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to delete timeline phase',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -502,7 +466,7 @@ router.put('/sections/:sectionId/reorder', authMiddleware, asyncHandler(async (r
     }
 
     // Update order for each phase
-    const updatePromises = phaseIds.map((phaseId, index) => 
+    const updatePromises = phaseIds.map((phaseId, index) =>
       TimelinePhase.findByIdAndUpdate(
         phaseId,
         { order: index },
@@ -535,9 +499,9 @@ router.put('/sections/:sectionId/reorder', authMiddleware, asyncHandler(async (r
     res.json(transformedPhases);
   } catch (error) {
     console.error('Error reordering timeline phases:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to reorder timeline phases',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -559,9 +523,9 @@ router.put('/sections/:sectionId/phases/reorder', authMiddleware, asyncHandler(a
     }
 
     // Update phase orders
-    const updatePromises = orderedIds.map(({ id, order }) => 
+    const updatePromises = orderedIds.map(({ id, order }) =>
       TimelinePhase.findByIdAndUpdate(
-        id, 
+        id,
         { order: order, section: sectionId },
         { new: true }
       )
@@ -589,9 +553,9 @@ router.put('/sections/:sectionId/phases/reorder', authMiddleware, asyncHandler(a
     res.json(transformedPhases);
   } catch (error) {
     console.error('Error reordering timeline phases:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to reorder timeline phases',
-      error: error.message 
+      error: error.message
     });
   }
 }));
@@ -608,22 +572,22 @@ router.post('/phases/:id/image', authMiddleware, upload.single('image'), asyncHa
   }
 
   try {
-    const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
-    
+    const result = await uploadToCloudinary(req.file.buffer, req.file.originalname, 'timeline-phases');
+
     // Delete old image if exists
     if (phase.image && phase.image.public_id) {
-      await cloudinary.uploader.destroy(phase.image.public_id);
+      await deleteFromCloudinary(phase.image.public_id);
     }
-    
+
     // Update phase with new image
     phase.image = {
       url: result.secure_url,
       public_id: result.public_id
     };
-    
+
     await phase.save();
-    
-    res.json({ 
+
+    res.json({
       message: 'Image uploaded successfully',
       image: phase.image
     });
@@ -643,74 +607,13 @@ router.delete('/phases/:id/image', authMiddleware, asyncHandler(async (req, res)
   try {
     // Delete image from Cloudinary if exists
     if (phase.image && phase.image.public_id) {
-      await cloudinary.uploader.destroy(phase.image.public_id);
+      await deleteFromCloudinary(phase.image.public_id);
     }
-    
+
     // Remove image from phase
     phase.image = undefined;
     await phase.save();
-    
-    res.json({ message: 'Image removed successfully' });
-  } catch (error) {
-    console.error('Image deletion error:', error);
-    res.status(500).json({ message: 'Failed to remove image' });
-  }
-}));
 
-// POST upload image for timeline phase
-router.post('/phases/:id/image', authMiddleware, upload.single('image'), asyncHandler(async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No image file provided' });
-  }
-
-  const phase = await TimelinePhase.findById(req.params.id);
-  if (!phase) {
-    return res.status(404).json({ message: 'Timeline phase not found' });
-  }
-
-  try {
-    const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
-    
-    // Delete old image if exists
-    if (phase.image && phase.image.public_id) {
-      await cloudinary.uploader.destroy(phase.image.public_id);
-    }
-    
-    // Update phase with new image
-    phase.image = {
-      url: result.secure_url,
-      public_id: result.public_id
-    };
-    
-    await phase.save();
-    
-    res.json({ 
-      message: 'Image uploaded successfully',
-      image: phase.image
-    });
-  } catch (error) {
-    console.error('Image upload error:', error);
-    res.status(500).json({ message: 'Failed to upload image' });
-  }
-}));
-
-// DELETE remove image from timeline phase
-router.delete('/phases/:id/image', authMiddleware, asyncHandler(async (req, res) => {
-  const phase = await TimelinePhase.findById(req.params.id);
-  if (!phase) {
-    return res.status(404).json({ message: 'Timeline phase not found' });
-  }
-
-  try {
-    // Delete image from Cloudinary if exists
-    if (phase.image && phase.image.public_id) {
-      await cloudinary.uploader.destroy(phase.image.public_id);
-    }
-    
-    // Remove image from phase
-    phase.image = undefined;
-    await phase.save();
-    
     res.json({ message: 'Image removed successfully' });
   } catch (error) {
     console.error('Image deletion error:', error);

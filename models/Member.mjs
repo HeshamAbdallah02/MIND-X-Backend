@@ -57,7 +57,7 @@ const memberSchema = new mongoose.Schema({
     },
     avatar: {
         url: String,
-        publicId: String
+        public_id: String
     },
     status: {
         type: String,

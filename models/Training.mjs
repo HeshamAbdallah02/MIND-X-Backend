@@ -26,7 +26,7 @@ const trainingSchema = new mongoose.Schema({
     trim: true,
     maxlength: 300
   },
-  
+
   // Date & Time
   startDate: {
     type: Date,
@@ -49,7 +49,7 @@ const trainingSchema = new mongoose.Schema({
     type: String, // e.g., "9:00 AM - 5:00 PM"
     default: ''
   },
-  
+
   // Location
   location: {
     venue: { type: String, default: '' },
@@ -58,7 +58,7 @@ const trainingSchema = new mongoose.Schema({
     isOnline: { type: Boolean, default: false },
     onlineLink: { type: String, default: '' }
   },
-  
+
   // Registration
   registration: {
     isOpen: { type: Boolean, default: true },
@@ -71,7 +71,7 @@ const trainingSchema = new mongoose.Schema({
       registered: { type: Number, default: 0, min: 0 }
     }
   },
-  
+
   // Pricing
   pricing: {
     isFree: { type: Boolean, default: true },
@@ -83,7 +83,7 @@ const trainingSchema = new mongoose.Schema({
     },
     currency: { type: String, default: 'EGP' }
   },
-  
+
   // Training Details
   topics: [{
     type: String,
@@ -101,7 +101,7 @@ const trainingSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  
+
   // Instructors
   instructors: [{
     name: { type: String, required: true },
@@ -114,7 +114,7 @@ const trainingSchema = new mongoose.Schema({
     linkedin: { type: String, default: '' },
     website: { type: String, default: '' }
   }],
-  
+
   // Media
   coverImage: {
     url: { type: String, required: true },
@@ -125,7 +125,7 @@ const trainingSchema = new mongoose.Schema({
     public_id: { type: String },
     caption: { type: String, default: '' }
   }],
-  
+
   // Additional Info
   category: {
     type: String,
@@ -141,7 +141,7 @@ const trainingSchema = new mongoose.Schema({
     enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'],
     default: 'All Levels'
   },
-  
+
   // Certificates & Materials
   certificate: {
     isProvided: { type: Boolean, default: false },
@@ -152,7 +152,7 @@ const trainingSchema = new mongoose.Schema({
     isProvided: { type: Boolean, default: false },
     description: { type: String, default: '' }
   },
-  
+
   // Status & Visibility
   status: {
     type: String,
@@ -170,28 +170,28 @@ const trainingSchema = new mongoose.Schema({
     default: false,
     index: true
   },
-  
+
   // Contact & Support
   contactInfo: {
     email: { type: String, default: '' },
     phone: { type: String, default: '' },
     whatsapp: { type: String, default: '' }
   },
-  
+
   // SEO & Social
   seo: {
     metaTitle: { type: String, default: '' },
     metaDescription: { type: String, default: '' },
     keywords: [{ type: String }]
   },
-  
+
   // Statistics
   stats: {
     views: { type: Number, default: 0 },
     registrations: { type: Number, default: 0 },
     completions: { type: Number, default: 0 }
   },
-  
+
   // Admin
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -216,26 +216,28 @@ trainingSchema.index({ createdBy: 1, createdAt: -1 });
 trainingSchema.index({ startDate: -1 });
 trainingSchema.index({ status: 1, isPublished: 1 });
 trainingSchema.index({ category: 1, status: 1 });
+// slug index is auto-created by unique: true on the slug field
+trainingSchema.index({ isPublished: 1, isFeatured: 1 });
 
 // Virtual for isPast
-trainingSchema.virtual('isPast').get(function() {
+trainingSchema.virtual('isPast').get(function () {
   return this.endDate < new Date();
 });
 
 // Virtual for isUpcoming
-trainingSchema.virtual('isUpcoming').get(function() {
+trainingSchema.virtual('isUpcoming').get(function () {
   return this.startDate > new Date();
 });
 
 // Virtual for daysUntil
-trainingSchema.virtual('daysUntil').get(function() {
+trainingSchema.virtual('daysUntil').get(function () {
   if (this.startDate < new Date()) return 0;
   const diffTime = this.startDate - new Date();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 });
 
 // Generate slug before saving
-trainingSchema.pre('save', async function(next) {
+trainingSchema.pre('save', async function (next) {
   if (this.isModified('title') || !this.slug) {
     let baseSlug = this.title
       .toLowerCase()
@@ -243,18 +245,18 @@ trainingSchema.pre('save', async function(next) {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
-    
+
     let slug = baseSlug;
     let counter = 1;
-    
+
     while (await mongoose.model('Training').findOne({ slug, _id: { $ne: this._id } })) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
-    
+
     this.slug = slug;
   }
-  
+
   // Auto-update status based on dates
   const now = new Date();
   if (this.endDate < now) {
@@ -264,14 +266,14 @@ trainingSchema.pre('save', async function(next) {
   } else if (this.startDate > now && this.status !== 'cancelled') {
     this.status = 'upcoming';
   }
-  
+
   next();
 });
 
 // Pre-remove hook to clean up Cloudinary images
-trainingSchema.pre('remove', async function(next) {
+trainingSchema.pre('remove', async function (next) {
   const cloudinary = (await import('../config/cloudinary.mjs')).default;
-  
+
   // Delete cover image
   if (this.coverImage?.public_id) {
     try {
@@ -280,7 +282,7 @@ trainingSchema.pre('remove', async function(next) {
       console.warn('Failed to delete cover image:', error);
     }
   }
-  
+
   // Delete gallery images
   for (const image of this.galleryImages) {
     if (image.public_id) {
@@ -291,7 +293,7 @@ trainingSchema.pre('remove', async function(next) {
       }
     }
   }
-  
+
   // Delete instructor avatars
   for (const instructor of this.instructors) {
     if (instructor.avatar?.public_id) {
@@ -302,7 +304,7 @@ trainingSchema.pre('remove', async function(next) {
       }
     }
   }
-  
+
   next();
 });
 

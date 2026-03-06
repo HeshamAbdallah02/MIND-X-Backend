@@ -14,18 +14,18 @@ const router = express.Router();
 router.get('/admin', authMiddleware, asyncHandler(async (req, res) => {
   // First, get all events sorted by order
   const events = await HomeEvent.find().lean();
-  
+
   // Then sort them in memory
   const sortedEvents = events.sort((a, b) => {
     // Active events first
     if (a.active && !b.active) return -1;
     if (!a.active && b.active) return 1;
-    
+
     // Among active events, sort by order
     if (a.active && b.active) {
       return a.order - b.order;
     }
-    
+
     // Among inactive events, sort by updatedAt
     return new Date(b.updatedAt) - new Date(a.updatedAt);
   });
@@ -41,11 +41,11 @@ router.get('/', asyncHandler(async (req, res) => {
 
 // Get single HomeEvent (public)
 router.get('/:id', asyncHandler(async (req, res) => {
-  const HomeEvent = await HomeEvent.findById(req.params.id);
-  if (!HomeEvent) {
+  const event = await HomeEvent.findById(req.params.id);
+  if (!event) {
     return res.status(404).json({ message: 'HomeEvent not found' });
   }
-  res.json(HomeEvent);
+  res.json(event);
 }));
 
 const eventValidation = Joi.object({
@@ -90,14 +90,14 @@ router.post('/', authMiddleware, sanitizeEvent, asyncHandler(async (req, res) =>
   const lastEvent = await HomeEvent.findOne({ active: true }).sort('-order');
   const order = lastEvent ? lastEvent.order + 1 : 0;
 
-  const HomeEvent = new HomeEvent({
+  const event = new HomeEvent({
     ...req.body,
     order,
     active: req.body.active !== undefined ? req.body.active : true
   });
 
-  await HomeEvent.save();
-  res.status(201).json(HomeEvent);
+  await event.save();
+  res.status(201).json(event);
 }));
 
 // Update HomeEvent (protected)
@@ -111,38 +111,38 @@ router.put('/:id', authMiddleware, sanitizeEvent, asyncHandler(async (req, res) 
     }))
   });
 
-  const HomeEvent = await HomeEvent.findByIdAndUpdate(
+  const event = await HomeEvent.findByIdAndUpdate(
     req.params.id,
     { ...req.body, order: undefined }, // Prevent order changes via PUT
     { new: true, runValidators: true }
   );
 
-  if (!HomeEvent) {
+  if (!event) {
     return res.status(404).json({ message: 'HomeEvent not found' });
   }
 
-  res.json(HomeEvent);
+  res.json(event);
 }));
 
 // Toggle HomeEvent active status (protected)
 router.patch('/:id/toggle-active', authMiddleware, asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
-  
+
   try {
     await session.withTransaction(async () => {
-      const HomeEvent = await HomeEvent.findById(req.params.id).session(session);
-      if (!HomeEvent) throw new Error('HomeEvent not found');
+      const event = await HomeEvent.findById(req.params.id).session(session);
+      if (!event) throw new Error('HomeEvent not found');
 
-      const currentStatus = HomeEvent.active;
-      const oldOrder = HomeEvent.order;
+      const currentStatus = event.active;
+      const oldOrder = event.order;
 
-      HomeEvent.active = !currentStatus;
+      event.active = !currentStatus;
 
       if (currentStatus) {
         // Deactivating: Set order to -1 and shift others up
-        HomeEvent.order = -1;
-        await HomeEvent.save({ session });
-        
+        event.order = -1;
+        await event.save({ session });
+
         await HomeEvent.updateMany(
           { active: true, order: { $gt: oldOrder } },
           { $inc: { order: -1 } },
@@ -154,8 +154,8 @@ router.patch('/:id/toggle-active', authMiddleware, asyncHandler(async (req, res)
           .sort('-order') // Corrected sort direction
           .session(session);
 
-        HomeEvent.order = (lastActiveEvent?.order ?? -1) + 1;
-        await HomeEvent.save({ session });
+        event.order = (lastActiveEvent?.order ?? -1) + 1;
+        await event.save({ session });
       }
     });
 
@@ -172,36 +172,36 @@ router.patch('/:id/toggle-active', authMiddleware, asyncHandler(async (req, res)
   }
 }));
 
-router.patch('/:id/order', 
+router.patch('/:id/order',
   authMiddleware,
   asyncHandler(async (req, res) => {
     const { order } = req.body;
     const session = await mongoose.startSession();
-    
+
     try {
       await session.withTransaction(async () => {
-        const HomeEvent = await HomeEvent.findById(req.params.id).session(session);
-        if (!HomeEvent) throw new Error('HomeEvent not found');
+        const event = await HomeEvent.findById(req.params.id).session(session);
+        if (!event) throw new Error('HomeEvent not found');
 
-        const oldOrder = HomeEvent.order;
-        HomeEvent.order = order;
-        await HomeEvent.save({ session });
+        const oldOrder = event.order;
+        event.order = order;
+        await event.save({ session });
 
         // Adjust other orders
         if (order < oldOrder) {
           await HomeEvent.updateMany(
-            { 
+            {
               order: { $gte: order, $lt: oldOrder },
-              _id: { $ne: HomeEvent._id }
+              _id: { $ne: event._id }
             },
             { $inc: { order: 1 } },
             { session }
           );
         } else {
           await HomeEvent.updateMany(
-            { 
+            {
               order: { $gt: oldOrder, $lte: order },
-              _id: { $ne: HomeEvent._id }
+              _id: { $ne: event._id }
             },
             { $inc: { order: -1 } },
             { session }
@@ -222,15 +222,15 @@ router.patch('/:id/order',
 
 // Delete HomeEvent (protected)
 router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
-  const HomeEvent = await HomeEvent.findByIdAndDelete(req.params.id);
-  
-  if (!HomeEvent) {
+  const event = await HomeEvent.findByIdAndDelete(req.params.id);
+
+  if (!event) {
     return res.status(404).json({ message: 'HomeEvent not found' });
   }
 
   // Reorder remaining events
   await HomeEvent.updateMany(
-    { order: { $gt: HomeEvent.order } },
+    { order: { $gt: event.order } },
     { $inc: { order: -1 } }
   );
 

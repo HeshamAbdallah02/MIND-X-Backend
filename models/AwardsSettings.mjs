@@ -19,7 +19,7 @@ const awardsSettingsSchema = new mongoose.Schema({
       type: String,
       trim: true
     },
-    publicId: {
+    public_id: {
       type: String,
       trim: true
     },
@@ -38,14 +38,14 @@ const awardsSettingsSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
-}, { 
+}, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
 // Ensure only one settings document exists
-awardsSettingsSchema.statics.findOrCreateDefault = async function() {
+awardsSettingsSchema.statics.findOrCreateDefault = async function () {
   let settings = await this.findOne();
   if (!settings) {
     settings = await this.create({});
