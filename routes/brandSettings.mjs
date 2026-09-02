@@ -53,7 +53,10 @@ const settingsValidation = Joi.object({
   }).optional(),
 
   footerLogo: Joi.object({
-    url: Joi.string().uri().required(),
+    url: Joi.alternatives().try(
+      Joi.string().uri(),
+      Joi.string().pattern(/^\//)  // allow relative paths like /default-logo.png
+    ).required(),
     alt: Joi.string().allow('').optional()
   }).optional(),
 
